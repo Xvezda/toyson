@@ -16,6 +16,11 @@ typedef enum parser_state_ {
 } parser_state;
 
 
+static int toyson_not_space(char *ptr);
+static int toyson_not_colon(char *ptr);
+static int toyson_not_comma(char *ptr);
+
+
 static parser_state state = STATE_NONE;
 
 void toyson_parser(toyson_t* entry, char *text)
@@ -299,14 +304,49 @@ char *toyson_skip_space(char *ptr)
 }
 
 
-char *toyson_wind_until_space(char *ptr)
+char *toyson_wind_until(char *ptr, toyson_until_handler_t handler)
 {
     if (!ptr) return NULL;
 
     char *cur = ptr;
-    while (*cur && !isspace(*cur)) ++cur;
+    while (*cur && handler(cur)) ++cur;
 
     return cur;
+}
+
+
+int toyson_not_space(char *ptr)
+{
+    return !isspace(*ptr);
+}
+
+
+char *toyson_wind_until_space(char *ptr)
+{
+    return toyson_wind_until(ptr, toyson_not_space);
+}
+
+
+int toyson_not_comma(char *ptr)
+{
+    return *ptr != ',';
+}
+
+char *toyson_wind_until_comma(char *ptr)
+{
+    return toyson_wind_until(ptr, toyson_not_comma);
+}
+
+
+int toyson_not_colon(char *ptr)
+{
+    return *ptr != ':';
+}
+
+
+char *toyson_wind_until_colon(char *ptr)
+{
+    return toyson_wind_until(ptr, toyson_not_colon);
 }
 
 
@@ -321,20 +361,4 @@ char *toyson_wind_until_quote(char *ptr)
 }
 
 
-char *toyson_wind_until_comma(char *ptr)
-{
-    char *cur = ptr;
-    while (*cur && *cur != ',') ++cur;
-
-    return cur;
-}
-
-
-char *toyson_wind_until_colon(char *ptr)
-{
-    char *cur = ptr;
-    while (*cur && *cur != ':') ++cur;
-
-    return cur;
-}
 

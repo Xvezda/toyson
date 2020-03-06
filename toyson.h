@@ -37,6 +37,7 @@ typedef struct toyson_s {
   struct toyson_s *next;
 } toyson_t;
 
+typedef int (*toyson_until_handler_t)(char *);
 
 toyson_t *toyson_new(void);
 void toyson_init(toyson_t *ref);
@@ -50,7 +51,9 @@ char *toyson_parse_null(char *text, char **ref);
 char *toyson_parse_boolean(char *text, char **ref);
 char *toyson_parse_number(char *text, char **ref);
 char *toyson_parse_string(char *text, char **ref);
+
 char *toyson_skip_space(char *ptr);
+char *toyson_wind_until(char *ptr, toyson_until_handler_t handler);
 char *toyson_wind_until_space(char *ptr);
 char *toyson_wind_until_quote(char *ptr);
 char *toyson_wind_until_comma(char *ptr);
