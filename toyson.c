@@ -8,51 +8,92 @@ typedef enum parser_state_ {
 } parser_state;
 
 
-toyson_t *toyson_parser(char *text)
+static parser_state state = STATE_NONE;
+
+void toyson_parser(toyson_t* entry, char *text)
 {
-    parser_state state = STATE_NONE;
-    toyson_t *ret = toyson_new();
+    if (!text) return;
 
-    for (char *ptr = text; *ptr; ++ptr) {
-        switch (*ptr) {
-        case '{': {
-            state = STATE_OBJECT;
-            ptr = toyson_skip_space(ptr);
+    char *ptr = toyson_skip_space(text);
+    toyson_t *item = toyson_new();
 
-            /* Parse key */
-            ptr = toyson_parse_string(ptr+1, &ret->key);
-            ptr = toyson_wind_until_colon(ptr+1);
+    assert(item->value == NULL);
 
-            /* Parse value */
-            ptr = toyson_parse_string(ptr+1, &ret->value);
+    if (!*ptr) return;
 
-            break;
+    switch (*ptr) {
+    case '{':
+        state = STATE_OBJECT;
+        item->type = TOYSON_TYPE_OBJECT;
+        toyson_append_item(entry, item);
+        break;
+    case '}':
+        state = STATE_NONE;
+        item->type = TOYSON_TYPE_CLOSE;
+        toyson_append_item(entry, item);
+        break;
+    case '"': {
+        state = STATE_STRING;
+        toyson_t *last = toyson_last_item(entry);
+        if (last->type != TOYSON_TYPE_KEY) {
+            item->type = TOYSON_TYPE_KEY;
+            ptr = toyson_parse_string(ptr, &item->value);
+            toyson_append_item(entry, item);
+
+            ptr = toyson_wind_until_colon(ptr);
+        } else {
+            item->type = TOYSON_TYPE_STRING;
+
+            ptr = toyson_parse_string(ptr, &item->value);
+            toyson_append_item(entry, item);
         }
-        default:
-            break;
-        }
+        break;
     }
-    return ret;
+    case ',':
+        break;
+    default:
+        break;
+    }
+    toyson_parser(entry, ptr+1);
+}
+
+
+void toyson_append_item(toyson_t *entry, toyson_t *item)
+{
+    toyson_t *last = toyson_last_item(entry);
+    last->next = item;
+    item->prev = last;
+}
+
+
+toyson_t *toyson_last_item(toyson_t *entry)
+{
+    toyson_t *ptr = entry->next;
+    if (!ptr) return entry;
+    while (ptr->next) ptr = ptr->next;
+    return ptr;
 }
 
 
 toyson_t *toyson_new()
 {
     toyson_t *ret = malloc(sizeof (toyson_t));
-    toyson_init(&ret);
+    toyson_init(ret);
 
     return ret;
 }
 
-void toyson_init(toyson_t **ref)
+
+void toyson_init(toyson_t *ref)
 {
-    (*ref)->key = NULL;
-    (*ref)->value = NULL;
-    (*ref)->next = NULL;
+    /* ref->key = NULL; */
+    ref->value = NULL;
+    ref->prev = NULL;
+    ref->next = NULL;
 }
 
 
-void toyson_del(toyson_t **ref)
+void toyson_del(toyson_t *ref)
 {
 }
 
@@ -77,9 +118,49 @@ char *toyson_parse_string(char *text, char **ref)
     return end;
 }
 
+void toyson_print(toyson_t *entry)
+{
+    toyson_t *ptr = entry->next;
+    do {
+        char *type = NULL;
+        switch (ptr->type) {
+        case TOYSON_TYPE_OBJECT:
+            type = "Object";
+            break;
+        case TOYSON_TYPE_CLOSE:
+            type = "Close";
+            break;
+        case TOYSON_TYPE_KEY:
+            type = "key";
+            break;
+        case TOYSON_TYPE_STRING:
+            type = "String";
+            break;
+        default:
+            type = "Unknown type";
+            break;
+        }
+        printf("type: %s\n", type);
+        switch (ptr->type) {
+        case TOYSON_TYPE_KEY:
+        case TOYSON_TYPE_STRING:
+            printf("value: %s\n", ptr->value);
+            break;
+        default:
+            break;
+        }
+        if (ptr && ptr->next) {
+            ptr = ptr->next;
+            continue;
+        }
+        break;
+    } while (1);
+}
 
 char *toyson_skip_space(char *ptr)
 {
+    if (!ptr) return NULL;
+
     char *cur = ptr;
     while (*cur && isspace(*cur)) ++cur;
 
