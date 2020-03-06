@@ -123,7 +123,6 @@ toyson_t *toyson_new()
 
 void toyson_init(toyson_t *ref)
 {
-    /* ref->key = NULL; */
     ref->value = NULL;
     ref->prev = NULL;
     ref->next = NULL;
