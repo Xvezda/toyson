@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         "\t\"asdf\": [123, 456, \"789\"],\n"
         "\"zxcv\": [[{}, {"
                 "\"abc\": true, \"def\": false"
-            "}, \"uiop\"], \"hjkl\", true ]\n"
+            "}, \"uiop\", null], \"hjkl\", true ]\n"
         "}";
 
     toyson_t toyson;

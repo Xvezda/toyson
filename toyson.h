@@ -46,6 +46,7 @@ void toyson_append_item(toyson_t *entry, toyson_t *item);
 toyson_t *toyson_last_item(toyson_t *entry);
 void toyson_print(toyson_t *entry);
 
+char *toyson_parse_null(char *text, char **ref);
 char *toyson_parse_boolean(char *text, char **ref);
 char *toyson_parse_number(char *text, char **ref);
 char *toyson_parse_string(char *text, char **ref);

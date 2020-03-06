@@ -80,6 +80,8 @@ void toyson_parser(toyson_t* entry, char *text)
         break;
     case 'n':  /* null */
         item->type = TOYSON_TYPE_NULL;
+        ptr = toyson_parse_null(ptr, &item->value);
+        toyson_append_item(entry, item);
         break;
     default:
         if (isdigit(*ptr)) {
@@ -133,6 +135,33 @@ void toyson_del(toyson_t *ref)
 }
 
 
+char *toyson_parse_null(char *text, char **ref)
+{
+    char *cur = text;
+
+    char *start = cur;
+    char *end = start;
+
+    char *n = "null";
+
+    if (!strncmp(cur, n, strlen(n))) {
+        end += strlen(n);
+    } else {
+        end = toyson_wind_until_space(start);
+    }
+    size_t len = (size_t) (end-start);
+
+    assert(len > 0);
+
+    *ref = malloc(len + 1 /* NULL */);
+
+    strncpy(*ref, start, len);
+    (*ref)[len] = '\0';
+
+    return end - 1;
+}
+
+
 char *toyson_parse_boolean(char *text, char **ref)
 {
     char *cur = text;
@@ -140,10 +169,13 @@ char *toyson_parse_boolean(char *text, char **ref)
     char *start = cur;
     char *end = start;
 
-    if (!strncmp(cur, "true", 4)) {
-        end += 4;
-    } else if (!strncmp(cur, "false", 5)) {
-        end += 5;
+    char *t = "true";
+    char *f = "false";
+
+    if (!strncmp(cur, t, strlen(t))) {
+        end += strlen(t);
+    } else if (!strncmp(cur, f, strlen(f))) {
+        end += strlen(f);
     } else {
         end = toyson_wind_until_space(start);
     }
@@ -225,7 +257,11 @@ void toyson_print(toyson_t *entry)
             value = "]";
             break;
         case TOYSON_TYPE_KEY:
-            type = "key";
+            type = "Key";
+            value = ptr->value;
+            break;
+        case TOYSON_TYPE_NULL:
+            type = "Null";
             value = ptr->value;
             break;
         case TOYSON_TYPE_STRING:
