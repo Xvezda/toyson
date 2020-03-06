@@ -19,7 +19,9 @@ int main(int argc, char **argv)
             " \"qwer\": 12345"
             "},\n"
         "\t\"asdf\": [123, 456, \"789\"],\n"
-        "\"zxcv\": [[{}, \"uiop\"], \"hjkl\"]\n"
+        "\"zxcv\": [[{}, {"
+                "\"abc\": true, \"def\": false"
+            "}, \"uiop\"], \"hjkl\", true ]\n"
         "}";
 
     toyson_t toyson;

@@ -75,6 +75,8 @@ void toyson_parser(toyson_t* entry, char *text)
     case 't':  /* true */
     case 'f':  /* false */
         item->type = TOYSON_TYPE_BOOLEAN;
+        ptr = toyson_parse_boolean(ptr, &item->value);
+        toyson_append_item(entry, item);
         break;
     case 'n':  /* null */
         item->type = TOYSON_TYPE_NULL;
@@ -128,6 +130,33 @@ void toyson_init(toyson_t *ref)
 
 void toyson_del(toyson_t *ref)
 {
+}
+
+
+char *toyson_parse_boolean(char *text, char **ref)
+{
+    char *cur = text;
+
+    char *start = cur;
+    char *end = start;
+
+    if (!strncmp(cur, "true", 4)) {
+        end += 4;
+    } else if (!strncmp(cur, "false", 5)) {
+        end += 5;
+    } else {
+        end = toyson_wind_until_space(start);
+    }
+    size_t len = (size_t) (end-start);
+
+    assert(len > 0);
+
+    *ref = malloc(len + 1 /* NULL */);
+
+    strncpy(*ref, start, len);
+    (*ref)[len] = '\0';
+
+    return end - 1;
 }
 
 
@@ -201,6 +230,10 @@ void toyson_print(toyson_t *entry)
             break;
         case TOYSON_TYPE_STRING:
             type = "String";
+            value = ptr->value;
+            break;
+        case TOYSON_TYPE_BOOLEAN:
+            type = "Boolean";
             value = ptr->value;
             break;
         case TOYSON_TYPE_NUMBER:
