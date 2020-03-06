@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         count = 1;
         json = \
             "{\n"
-            "  \"foo\": \"bar\","
+            "  \"foo\" : \"bar:bar\","
             "  \"baz\": {"
                 "\"hello\": \"world\","
                 " \"qwer\": 12345"
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
             "\t\"asdf\": [123, 456, \"789\"],\n"
             "\"zxcv\": [[{}, {"
                     "\"abc\": true, \"def\": false"
-                "}, \"uiop\", null], \"hjkl\", true ]\n"
+                "}, \"uiop\", null, \"\" ], \"hjkl\", true ]\n"
             "}";
     } else {
         is_file = 1;

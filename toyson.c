@@ -57,10 +57,13 @@ void toyson_parser(toyson_t* entry, char *text)
         state = STATE_STRING;
         toyson_t *last = toyson_last_item(entry);
 
-        char *comma = toyson_wind_until_comma(ptr);
-        char *colon = toyson_wind_until_colon(ptr);
+        char *tmp = toyson_wind_until_quote(ptr+1);
+        char *comma = toyson_wind_until_comma(tmp);
+        char *colon = toyson_wind_until_colon(tmp);
 
-        /* If colon does not exists, or comma is closer than colon */
+        /*
+         * If colon does not exists, or comma is closer than colon
+         */
         if (!*colon || colon > comma) {
             item->type = TOYSON_TYPE_STRING;
 
@@ -145,8 +148,12 @@ void toyson_del(toyson_t *ref)
         ptr = ptr->prev;
 
         free(tmp->value);
+        tmp->value = NULL;
+        tmp->next = NULL;
+
         free(tmp);
     }
+    ptr->next = NULL;
 }
 
 
@@ -237,19 +244,24 @@ char *toyson_parse_string(char *text, char **ref)
     char *end = toyson_wind_until_quote(cur+1);
 
     size_t len = (size_t) (end-start);
-    assert(len > 0);
+    assert(len >= 0);
 
-    *ref = malloc(len + 1 /* NULL */);
+    if (len > 0) {
+        *ref = malloc(len + 1 /* NULL */);
 
-    strncpy(*ref, start, len);
-    (*ref)[len] = '\0';
-
+        strncpy(*ref, start, len);
+        (*ref)[len] = '\0';
+    } else {
+        *ref = NULL;
+    }
     return end;
 }
 
 void toyson_print(toyson_t *entry)
 {
     toyson_t *ptr = entry->next;
+
+    if (!ptr) return;
     do {
         char *type = NULL;
         char *value = "";
