@@ -136,6 +136,17 @@ void toyson_init(toyson_t *ref)
 
 void toyson_del(toyson_t *ref)
 {
+    toyson_t *last = toyson_last_item(ref);
+    toyson_t *tmp = NULL;
+    toyson_t *ptr = last;
+
+    while (ptr->prev && ptr->prev != ref) {
+        tmp = ptr;
+        ptr = ptr->prev;
+
+        free(tmp->value);
+        free(tmp);
+    }
 }
 
 
