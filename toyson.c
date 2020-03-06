@@ -1,4 +1,12 @@
+/**
+ * Copyright (c) 2020 Xvezda <xvezda@naver.com>
+ *
+ * Use of this source code is governed by an MIT-style
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
 #include "toyson.h"
+
 
 typedef enum parser_state_ {
     STATE_NONE,
@@ -24,34 +32,59 @@ void toyson_parser(toyson_t* entry, char *text)
     switch (*ptr) {
     case '{':
         state = STATE_OBJECT;
-        item->type = TOYSON_TYPE_OBJECT;
+        item->type = TOYSON_TYPE_OBJECT_OPEN;
         toyson_append_item(entry, item);
         break;
     case '}':
         state = STATE_NONE;
-        item->type = TOYSON_TYPE_CLOSE;
+        item->type = TOYSON_TYPE_OBJECT_CLOSE;
+        toyson_append_item(entry, item);
+        break;
+    case '[':
+        item->type = TOYSON_TYPE_ARRAY_OPEN;
+        toyson_append_item(entry, item);
+        break;
+    case ']':
+        item->type = TOYSON_TYPE_ARRAY_CLOSE;
         toyson_append_item(entry, item);
         break;
     case '"': {
         state = STATE_STRING;
         toyson_t *last = toyson_last_item(entry);
-        if (last->type != TOYSON_TYPE_KEY) {
+
+        char *comma = toyson_wind_until_comma(ptr);
+        char *colon = toyson_wind_until_colon(ptr);
+
+        /* If colon does not exists, or comma is closer than colon */
+        if (!*colon || colon > comma) {
+            item->type = TOYSON_TYPE_STRING;
+
+            ptr = toyson_parse_string(ptr, &item->value);
+            toyson_append_item(entry, item);
+        } else {
             item->type = TOYSON_TYPE_KEY;
             ptr = toyson_parse_string(ptr, &item->value);
             toyson_append_item(entry, item);
 
             ptr = toyson_wind_until_colon(ptr);
-        } else {
-            item->type = TOYSON_TYPE_STRING;
-
-            ptr = toyson_parse_string(ptr, &item->value);
-            toyson_append_item(entry, item);
         }
         break;
     }
     case ',':
         break;
+    case 't':  /* true */
+    case 'f':  /* false */
+        item->type = TOYSON_TYPE_BOOLEAN;
+        break;
+    case 'n':  /* null */
+        item->type = TOYSON_TYPE_NULL;
+        break;
     default:
+        if (isdigit(*ptr)) {
+            item->type = TOYSON_TYPE_NUMBER;
+            ptr = toyson_parse_number(ptr, &item->value);
+            toyson_append_item(entry, item);
+        }
         break;
     }
     toyson_parser(entry, ptr+1);
@@ -98,6 +131,26 @@ void toyson_del(toyson_t *ref)
 }
 
 
+char *toyson_parse_number(char *text, char **ref)
+{
+    char *start = text;
+
+    char *cur = start;
+    while (*cur && isdigit(*cur)) ++cur;
+    char *end = cur;
+
+    size_t len = (size_t) (end-start);
+    assert(len > 0);
+
+    *ref = malloc(len + 1 /* NULL */);
+
+    strncpy(*ref, start, len);
+    (*ref)[len] = '\0';
+
+    return end - 1;
+}
+
+
 char *toyson_parse_string(char *text, char **ref)
 {
     if (!ref) return NULL;
@@ -123,32 +176,42 @@ void toyson_print(toyson_t *entry)
     toyson_t *ptr = entry->next;
     do {
         char *type = NULL;
+        char *value = "";
+
         switch (ptr->type) {
-        case TOYSON_TYPE_OBJECT:
-            type = "Object";
+        case TOYSON_TYPE_OBJECT_OPEN:
+            type = "Open Object";
+            value = "{";
             break;
-        case TOYSON_TYPE_CLOSE:
-            type = "Close";
+        case TOYSON_TYPE_OBJECT_CLOSE:
+            type = "Close Object";
+            value = "}";
+            break;
+        case TOYSON_TYPE_ARRAY_OPEN:
+            type = "Open Array";
+            value = "[";
+            break;
+        case TOYSON_TYPE_ARRAY_CLOSE:
+            type = "Close Array";
+            value = "]";
             break;
         case TOYSON_TYPE_KEY:
             type = "key";
+            value = ptr->value;
             break;
         case TOYSON_TYPE_STRING:
             type = "String";
+            value = ptr->value;
+            break;
+        case TOYSON_TYPE_NUMBER:
+            type = "Number";
+            value = ptr->value;
             break;
         default:
             type = "Unknown type";
             break;
         }
-        printf("type: %s\n", type);
-        switch (ptr->type) {
-        case TOYSON_TYPE_KEY:
-        case TOYSON_TYPE_STRING:
-            printf("value: %s\n", ptr->value);
-            break;
-        default:
-            break;
-        }
+        printf("type: %s, value: %s\n", type, value);
         if (ptr && ptr->next) {
             ptr = ptr->next;
             continue;
@@ -167,6 +230,18 @@ char *toyson_skip_space(char *ptr)
     return cur;
 }
 
+
+char *toyson_wind_until_space(char *ptr)
+{
+    if (!ptr) return NULL;
+
+    char *cur = ptr;
+    while (*cur && !isspace(*cur)) ++cur;
+
+    return cur;
+}
+
+
 char *toyson_wind_until_quote(char *ptr)
 {
     char *cur = ptr;
@@ -174,6 +249,15 @@ char *toyson_wind_until_quote(char *ptr)
         if (*cur == '\\') ++cur;
         ++cur;
     }
+    return cur;
+}
+
+
+char *toyson_wind_until_comma(char *ptr)
+{
+    char *cur = ptr;
+    while (*cur && *cur != ',') ++cur;
+
     return cur;
 }
 

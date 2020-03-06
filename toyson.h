@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2020 Xvezda <xvezda@naver.com>
+ *
+ * Use of this source code is governed by an MIT-style
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
 #ifndef TOYSON_H_
 #define TOYSON_H_
 
@@ -13,17 +20,18 @@
 typedef enum {
   TOYSON_TYPE_ENTRY,
   TOYSON_TYPE_KEY,
-  TOYSON_TYPE_CLOSE,  /* Closing object */
+  TOYSON_TYPE_OBJECT_OPEN,   /* Open object */
+  TOYSON_TYPE_OBJECT_CLOSE,  /* Closing object */
+  TOYSON_TYPE_ARRAY_OPEN,
+  TOYSON_TYPE_ARRAY_CLOSE,
+  TOYSON_TYPE_NULL,
   TOYSON_TYPE_NUMBER,
   TOYSON_TYPE_STRING,
   TOYSON_TYPE_BOOLEAN,
-  TOYSON_TYPE_OBJECT,
-  TOYSON_TYPE_ARRAY,
 } toyson_data_type_t;
 
 typedef struct toyson_s {
   toyson_data_type_t type;
-  /* char *key; */
   char *value;
   struct toyson_s *prev;
   struct toyson_s *next;
@@ -38,9 +46,12 @@ void toyson_append_item(toyson_t *entry, toyson_t *item);
 toyson_t *toyson_last_item(toyson_t *entry);
 void toyson_print(toyson_t *entry);
 
+char *toyson_parse_number(char *text, char **ref);
 char *toyson_parse_string(char *text, char **ref);
 char *toyson_skip_space(char *ptr);
+char *toyson_wind_until_space(char *ptr);
 char *toyson_wind_until_quote(char *ptr);
+char *toyson_wind_until_comma(char *ptr);
 char *toyson_wind_until_colon(char *ptr);
 
 
