@@ -6,6 +6,7 @@
  * https://opensource.org/licenses/MIT.
  */
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include "toyson.h"
@@ -36,6 +37,12 @@ int main(int argc, char **argv)
                 "}, \"uiop\", null, \"\" ], \"hjkl\", true ]\n"
             "}";
     } else {
+        if (!strncmp(argv[1], "-h", 2) || !strncmp(argv[1], "--help", 6)) {
+            fprintf(stderr, "usage: [JSON FILES]\n");
+
+            return EXIT_FAILURE;
+        }
+
         is_file = 1;
         count = argc - 1;
     }
