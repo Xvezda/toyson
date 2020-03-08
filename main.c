@@ -38,7 +38,7 @@ int main(int argc, char **argv)
             "}";
     } else {
         if (!strncmp(argv[1], "-h", 2) || !strncmp(argv[1], "--help", 6)) {
-            fprintf(stderr, "usage: [JSON FILES]\n");
+            fprintf(stderr, "usage: %s [JSON FILES]\n", argv[0]);
 
             return EXIT_FAILURE;
         }
