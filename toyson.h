@@ -43,6 +43,7 @@ toyson_t *toyson_new(void);
 void toyson_init(toyson_t *ref);
 void toyson_del(toyson_t *ref);
 void toyson_parser(toyson_t *entry, char *text);
+char *toyson_parse_single_token(toyson_t *entry, char *text);
 void toyson_append_item(toyson_t *entry, toyson_t *item);
 toyson_t *toyson_last_item(toyson_t *entry);
 void toyson_print(toyson_t *entry);

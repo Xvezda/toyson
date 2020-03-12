@@ -8,40 +8,34 @@
 #include "toyson.h"
 
 
-typedef enum parser_state_ {
-    STATE_NONE,
-    STATE_OBJECT,
-    STATE_ARRAY,
-    STATE_STRING
-} parser_state;
-
-
 static int toyson_not_space(char *ptr);
 static int toyson_not_colon(char *ptr);
 static int toyson_not_comma(char *ptr);
 
 
-static parser_state state = STATE_NONE;
-
 void toyson_parser(toyson_t* entry, char *text)
 {
-    if (!text) return;
+    char *cur = text;
+    while ((cur = toyson_parse_single_token(entry, cur)) != NULL);
+}
+
+
+char *toyson_parse_single_token(toyson_t *entry, char *text) {
+    if (!text) return NULL;
 
     char *ptr = toyson_skip_space(text);
     toyson_t *item = toyson_new();
 
     assert(item->value == NULL);
 
-    if (!*ptr) return;
+    if (!*ptr) return NULL;
 
     switch (*ptr) {
     case '{':
-        state = STATE_OBJECT;
         item->type = TOYSON_TYPE_OBJECT_OPEN;
         toyson_append_item(entry, item);
         break;
     case '}':
-        state = STATE_NONE;
         item->type = TOYSON_TYPE_OBJECT_CLOSE;
         toyson_append_item(entry, item);
         break;
@@ -54,7 +48,6 @@ void toyson_parser(toyson_t* entry, char *text)
         toyson_append_item(entry, item);
         break;
     case '"': {
-        state = STATE_STRING;
         toyson_t *last = toyson_last_item(entry);
 
         char *tmp = toyson_wind_until_quote(ptr+1);
@@ -99,7 +92,7 @@ void toyson_parser(toyson_t* entry, char *text)
         }
         break;
     }
-    toyson_parser(entry, ptr+1);
+    return ptr + 1;
 }
 
 
