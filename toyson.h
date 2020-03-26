@@ -17,6 +17,8 @@
 #include <assert.h>
 
 
+#define TOYSON(...) #__VA_ARGS__;
+
 typedef enum {
   TOYSON_TYPE_ENTRY,
   TOYSON_TYPE_KEY,

@@ -24,18 +24,17 @@ int main(int argc, char **argv)
 
     if (argc < 2) {
         count = 1;
-        json = \
-            "{\n"
-            "  \"foo\" : \"bar:bar\","
-            "  \"baz\": {"
-                "\"hello\": \"world\","
-                " \"qwer\": 12345"
-                "},\n"
-            "\t\"asdf\": [123, 456, \"789\"],\n"
-            "\"zxcv\": [[{}, {"
-                    "\"abc\": true, \"def\": false"
-                "}, \"uiop\", null, \"\" ], \"hjkl\", true ]\n"
-            "}";
+        json = TOYSON({
+            "foo": "bar:bar",
+            "baz": {
+                "hello": "world",
+                "qwer": 12345
+            },
+            "asdf": [123, 456, "789"],
+            "zxcv": [[{}, {
+                "abc": true, "def": false
+            }, "uiop", null, ""], "hjkl", true]
+        });
     } else {
         if (!strncmp(argv[1], "-h", 2) || !strncmp(argv[1], "--help", 6)) {
             fprintf(stderr, "usage: %s [JSON FILES]\n", argv[0]);
